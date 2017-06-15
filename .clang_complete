@@ -1,0 +1,8 @@
+-I./src
+-I/usr/include
+-DLT_DEBUG
+-std=c++11
+-Wall
+-Wextra
+-Wpedantic
+-Wno-gnu-anonymous-struct

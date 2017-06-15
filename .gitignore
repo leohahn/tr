@@ -1,0 +1,3 @@
+*.tga
+build/*
+!build/resources

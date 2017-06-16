@@ -196,6 +196,8 @@ struct Array {
     isize len;
     isize capacity;
     T *data;
+
+    T operator[](isize i);
 };
 
 template<typename T> Array<T>  array_make();
@@ -452,6 +454,11 @@ array_push(Array<T> *arr, T val)
     }
 
     arr->data[arr->len++] = val;
+}
+
+template<typename T> T
+Array<T>::operator[](isize i) {
+    return this->data[i];
 }
 
 ///////////////////////////////////////////////////////

@@ -147,6 +147,8 @@ void lt_image_set(TGAImageGray *img, u16 x, u16 y, u8 shade) {
 }
 
 void lt_image_set(TGAImageRGBA *img, u16 x, u16 y, const Vec4i shade) {
+    // printf("y: %u\n", y);
+    fflush(stdout);
     LT_ASSERT(x < img->header.image_width);
     LT_ASSERT(y < img->header.image_height);
 

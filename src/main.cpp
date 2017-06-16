@@ -64,6 +64,10 @@ obj_file_load(const char *filepath)
                    &face_v.x, &face_t.x, &face_n.x, &face_v.y, &face_t.y, &face_n.y,
                    &face_v.z, &face_t.z, &face_n.z);
 
+            face_v.x--;
+            face_v.y--;
+            face_v.z--;
+
             array_push(&faces_vertices, face_v);
             array_push(&faces_textures, face_t);
             array_push(&faces_normals, face_n);
@@ -101,8 +105,6 @@ obj_file_free(ObjFile *f)
 internal void
 draw_line(TGAImageRGBA *img, Vec2i p0, Vec2i p1, const Vec4i color)
 {
-    //LT_ASSERT(p0.x != p1.x || p0.y != p1.y);
-
     i32 size_x = lt_abs(p0.x - p1.x);
     i32 size_y = lt_abs(p0.y - p1.y);
 
@@ -147,13 +149,15 @@ draw_line(TGAImageRGBA *img, Vec2i p0, Vec2i p1, const Vec4i color)
 int
 main(void)
 {
-    ObjFile obj = obj_file_load("resources/african_head.obj");
-
     const i32 IMAGE_WIDTH = 1024;
     const i32 IMAGE_HEIGHT = 768;
+
+    ObjFile obj = obj_file_load("resources/african_head.obj");
+
     TGAImageRGBA *img = lt_image_make_rgba(IMAGE_WIDTH, IMAGE_HEIGHT);
 
     Vec4i black(0, 0, 0, 255);
+    Vec4i red(255, 0, 0, 255);
     Vec4i white(255, 255, 255, 255);
 
     lt_image_fill(img, black);
@@ -163,10 +167,11 @@ main(void)
         Vec3i face = obj.faces_vertices.data[f];
 
         for (isize v = 0; v < 3; v++) {
-            Vec3f v0 = obj.vertices.data[face.vals[v]];
-            Vec3f v1 = obj.vertices.data[face.vals[(v+1)%3]];
-            draw_line(img, Vec2i((v0.x+1) * IMAGE_WIDTH/2, (v0.y+1) * IMAGE_HEIGHT/2),
-                      Vec2i((v1.x+1) * IMAGE_WIDTH/2, (v1.y+1) * IMAGE_HEIGHT/2), white);
+            Vec3f v0 = obj.vertices[face.vals[v]];
+            Vec3f v1 = obj.vertices[face.vals[(v+1)%3]];
+            Vec2i p0((v0.x+1)*(IMAGE_WIDTH/2-1), (v0.y+1)*(IMAGE_HEIGHT/2-1));
+            Vec2i p1((v1.x+1)*(IMAGE_WIDTH/2-1), (v1.y+1)*(IMAGE_HEIGHT/2-1));
+            draw_line(img, p0, p1, white);
         }
     }
 

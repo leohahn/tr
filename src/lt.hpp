@@ -126,15 +126,17 @@ static_assert(sizeof(f64) == 8, "f64 should have 8 bytes");
 #  endif // LT_DEBUG
 #endif // LT_ASSERT
 
-internal inline
-void lt_swap(i32 *a, i32 *b) {
+internal inline void
+lt_swap(i32 *a, i32 *b)
+{
     i32 tmp_a = *a;
     *a = *b;
     *b = tmp_a;
 }
 
-internal inline
-bool lt_is_little_endian() {
+internal inline bool
+lt_is_little_endian()
+{
     i32 num = 1;
     if (*(char*)&num == 1)
         return true;
@@ -196,7 +198,7 @@ struct Array {
     T *data;
 };
 
-template<typename T> Array<T> *array_make();
+template<typename T> Array<T>  array_make();
 template<typename T> void      array_free(Array<T> *arr);
 template<typename T> void      array_push(Array<T> *arr, T val);
 
@@ -237,7 +239,9 @@ template<typename T> void      array_push(Array<T> *arr, T val);
 // File Implementation
 //
 
-FileContents *file_read_contents(const char *filename) {
+FileContents *
+file_read_contents(const char *filename)
+{
     FILE *fp = fopen(filename, "rb"); // open in binary mode.
     void *file_data = NULL;
 
@@ -298,12 +302,16 @@ FileContents *file_read_contents(const char *filename) {
     return ret;
 }
 
-void file_free_contents(FileContents *fc) {
+void
+file_free_contents(FileContents *fc)
+{
     lt_free(fc->data);
     lt_free(fc);
 }
 
-isize file_get_size(const char *filename) {
+isize
+file_get_size(const char *filename)
+{
 #if defined(__unix__)
     struct stat st;
     if (stat(filename, &st) < 0) {
@@ -320,7 +328,9 @@ isize file_get_size(const char *filename) {
 // String
 //
 
-String *string__alloc(isize len, isize capacity) {
+String *
+string__alloc(isize len, isize capacity)
+{
     String *new_str   = (String*)malloc(sizeof(*new_str));
     new_str->len      = len;
     new_str->capacity = capacity;
@@ -328,27 +338,35 @@ String *string__alloc(isize len, isize capacity) {
     return new_str;
 }
 
-String *string_make(const char *str) {
+String *
+string_make(const char *str)
+{
     isize len = strlen(str);
     String *new_str = string__alloc(len, len+1);
     memcpy(new_str->data, str, len);
     return new_str;
 }
 
-String *string_make(const char *buf, isize len) {
+String *
+string_make(const char *buf, isize len)
+{
     String *new_str = string__alloc(len, len+1);
     memcpy(new_str->data, buf, len);
     return new_str;
 }
 
-void string_free(String *str) {
+void
+string_free(String *str)
+{
     LT_ASSERT(str != NULL);
 
     lt_free(str->data);
     lt_free(str);
 }
 
-void string__grow(String *str) {
+void
+string__grow(String *str)
+{
     LT_ASSERT(str != NULL);
 
     const f32 GROW_FACTOR = 1.5f;
@@ -366,7 +384,9 @@ void string__grow(String *str) {
     str->capacity = new_capacity;
 }
 
-void string_concat(String *str, const char *rhs) {
+void
+string_concat(String *str, const char *rhs)
+{
     LT_ASSERT(str != NULL && rhs != NULL);
 
     isize rhs_len = strlen(rhs);
@@ -384,15 +404,14 @@ void string_concat(String *str, const char *rhs) {
 // Array
 //
 
-template<typename T> Array<T> *
+template<typename T> Array<T>
 array_make(void)
 {
     const i32 INITIAL_CAP = 8;
-
-    Array<T> *arr = malloc(sizeof(*arr));
-    arr->len = 0;
-    arr->capacity = INITIAL_CAP;
-    arr->data = calloc(INITIAL_CAP, sizeof(*data));
+    Array<T> arr = {};
+    arr.len = 0;
+    arr.capacity = INITIAL_CAP;
+    arr.data = (T*)calloc(INITIAL_CAP, sizeof(T));
     return arr;
 }
 
@@ -400,7 +419,6 @@ template<typename T> void
 array_free(Array<T> *arr)
 {
     lt_free(arr->data);
-    lt_free(arr);
 }
 
 template<typename T> void
@@ -411,16 +429,16 @@ array__grow(Array<T> *arr)
     const f32 GROW_FACTOR = 1.5f;
 
     isize new_capacity = (isize)(arr->capacity * GROW_FACTOR);
-    char *new_data = (char*)realloc(arr->data, new_capacity * sizeof(T));
+    T *new_data = (T*)realloc(arr->data, new_capacity * sizeof(T));
 
     if (new_data == NULL) {
         LT_FAIL("Could not allocate more memory\n");
     }
 
-    memset(arr->data+arr->len, 0, new_capacity - arr->capacity);
-
     arr->data = new_data;
     arr->capacity = new_capacity;
+
+    memset(arr->data+arr->len, 0, new_capacity - arr->len);
 }
 
 
@@ -429,11 +447,11 @@ array_push(Array<T> *arr, T val)
 {
     LT_ASSERT(arr != NULL);
 
-    if (arr->len+1 >= arr->capacity) {
+    if (arr->len+1 > arr->capacity) {
         array__grow(arr);
     }
 
-    arr->data[arr->len] = val;
+    arr->data[arr->len++] = val;
 }
 
 ///////////////////////////////////////////////////////
@@ -441,7 +459,9 @@ array_push(Array<T> *arr, T val)
 // Utils
 //
 
-void lt_get_display_dpi(i32 *x, i32 *y) {
+void
+lt_get_display_dpi(i32 *x, i32 *y)
+{
 #ifdef __unix__
     i32 scr = 0; /* Screen number */
 

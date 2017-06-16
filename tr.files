@@ -1,0 +1,12 @@
+build/resources/basic.glsl
+src/KHR/khrplatform.h
+src/glad/glad.c
+src/glad/glad.h
+src/lt.hpp
+src/lt_image.cpp
+src/lt_image.hpp
+src/lt_math.cpp
+src/lt_math.hpp
+src/main.cpp
+src/math_3d.h
+Makefile

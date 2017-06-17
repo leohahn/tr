@@ -7,23 +7,29 @@
 // Vector implementation
 //
 
-Vec3i::Vec3i() {}
-Vec3i::Vec3i(i32 x, i32 y, i32 z) : x(x), y(y), z(z) {}
-
-Vec3f::Vec3f() {}
-Vec3f::Vec3f(f32 x, f32 y, f32 z) : x(x), y(y), z(z) {}
-
-Vec3f vec_normalize(const Vec3f vec) {
-    f32 size = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-    LT_ASSERT(size >= 0);
-    return Vec3f(vec.x / size, vec.y / size, vec.z / size);
+Vec2i
+operator-(const Vec2i lhs, const Vec2i rhs)
+{
+    return Vec2i(lhs.x - rhs.x,
+                 lhs.y - rhs.y);
 }
 
-f32 vec_dot(const Vec3f lhs, const Vec3f rhs) {
-    return (lhs.x * rhs.x) + (lhs.y * rhs.y) + (lhs.z * rhs.z);
+Vec3f
+operator-(const Vec3f a, const Vec3f b) {
+    Vec3f r;
+    r.x = a.x - b.x;
+    r.y = a.y - b.y;
+    r.z = a.z - b.z;
+    return r;
 }
 
-Vec3f vec_add(const Vec3f a, const Vec3f b) {
+Vec2i operator*(const Vec2i v, const i32 k) {return Vec2i(v.x * k, v.y * k);}
+Vec2i operator*(const i32 k, const Vec2i v) {return Vec2i(v.x * k, v.y * k);}
+Vec2i operator-(const Vec2i v) {return Vec2i(-v.x, -v.y);}
+
+Vec3f
+operator+(const Vec3f a, const Vec3f b)
+{
     Vec3f r;
     r.x = a.x + b.x;
     r.y = a.y + b.y;
@@ -31,13 +37,45 @@ Vec3f vec_add(const Vec3f a, const Vec3f b) {
     return r;
 }
 
-Vec3f vec_sub(const Vec3f a, const Vec3f b) {
-    Vec3f r;
-    r.x = a.x - b.x;
-    r.y = a.y - b.y;
-    r.z = a.z - b.z;
-    return r;
+Vec3i::Vec3i() {}
+Vec3i::Vec3i(i32 x, i32 y, i32 z) : x(x), y(y), z(z) {}
+
+Vec3f::Vec3f() {}
+Vec3f::Vec3f(f32 x, f32 y, f32 z) : x(x), y(y), z(z) {}
+
+f32
+vec_len(const Vec3f v)
+{
+    return sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
 }
+
+Vec3f
+vec_normalize(const Vec3f vec)
+{
+    f32 size = vec_len(vec);
+    LT_ASSERT(size >= 0);
+    return Vec3f(vec.x / size, vec.y / size, vec.z / size);
+}
+
+i32
+vec_dot(const Vec2i a, const Vec2i b)
+{
+    return (a.x * b.x) + (a.y * b.y);
+}
+
+Vec2i
+vec_proj(const Vec2i p, const Vec2i plane)
+{
+    i32 alpha = vec_dot(p, plane) / vec_dot(plane, plane);
+    return alpha * plane;
+}
+
+f32
+vec_dot(const Vec3f lhs, const Vec3f rhs)
+{
+    return (lhs.x * rhs.x) + (lhs.y * rhs.y) + (lhs.z * rhs.z);
+}
+
 
 Vec3f vec_cross(const Vec3f a, const Vec3f b) {
     return Vec3f(
@@ -46,42 +84,8 @@ Vec3f vec_cross(const Vec3f a, const Vec3f b) {
         (a.x * b.y) - (a.y * b.x));
 }
 
-Vec3i vec_add(const Vec3i a, const Vec3i b) {
-    Vec3i r;
-    r.x = a.x + b.x;
-    r.y = a.y + b.y;
-    r.z = a.z + b.z;
-    return r;
-}
-
-Vec3i vec_sub(const Vec3i a, const Vec3i b) {
-    Vec3i r;
-    r.x = a.x - b.x;
-    r.y = a.y - b.y;
-    r.z = a.z - b.z;
-    return r;
-}
-
 Vec4i::Vec4i() {}
 Vec4i::Vec4i(i32 x, i32 y, i32 z, i32 w) : x(x), y(y), z(z), w(w) {}
-
-Vec4i vec_add(const Vec4i a, const Vec4i b) {
-    Vec4i r;
-    r.x = a.x + b.x;
-    r.y = a.y + b.y;
-    r.z = a.z + b.z;
-    r.w = a.w + b.w;
-    return r;
-}
-
-Vec4i vec_sub(const Vec4i a, const Vec4i b) {
-    Vec4i r;
-    r.x = a.x - b.x;
-    r.y = a.y - b.y;
-    r.z = a.z - b.z;
-    r.w = a.w - b.w;
-    return r;
-}
 
 Mat4::Mat4(f32 m00, f32 m01, f32 m02, f32 m03,
            f32 m10, f32 m11, f32 m12, f32 m13,
@@ -113,7 +117,7 @@ Mat4 mat4_perspective(f32 fovy, f32 aspect_ratio, f32 znear, f32 zfar) {
 }
 
 Mat4 mat4_look_at(const Vec3f eye, const Vec3f center, const Vec3f up) {
-    Vec3f f = vec_normalize(vec_sub(center, eye));
+    Vec3f f = vec_normalize(center - eye);
     Vec3f s = vec_normalize(vec_cross(f, up));
     Vec3f u = vec_cross(s, f);
 

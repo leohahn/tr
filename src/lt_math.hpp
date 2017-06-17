@@ -61,14 +61,21 @@ union Vec4i {
     Vec4i(i32 x, i32 y, i32 z, i32 w);
 };
 
-Vec3i vec_add      (const Vec3i a, const Vec3i b);
-Vec3f vec_add      (const Vec3f a, const Vec3f b);
-Vec3i vec_sub      (const Vec3i a, const Vec3i b);
-Vec3f vec_sub      (const Vec3f a, const Vec3f b);
-Vec4i vec_add      (const Vec4i a, const Vec4i b);
-Vec4i vec_sub      (const Vec4i a, const Vec4i b);
-f32   vec_dot      (const Vec3f a, const Vec3f b);
-Vec3f vec_normalize(const Vec3f a);
+
+Vec2i operator-     (const Vec2i lhs, const Vec2i rhs);
+Vec2i operator-     (const Vec2i v);
+Vec3f operator-     (const Vec3f a, const Vec3f b);
+Vec2i operator*     (const Vec2i v, const i32 k);
+Vec2i operator*     (const i32 k, const Vec2i v);
+
+f32   vec_dot       (const Vec3f a, const Vec3f b);
+i32   vec_dot       (const Vec2i a, const Vec2i b);
+Vec3f vec_normalize (const Vec3f a);
+Vec3f vec_cross     (const Vec3f a, const Vec3f b);
+Vec2i vec_proj      (const Vec2i p, const Vec2i plane);
+f32   vec_len       (const Vec3f v);
+
+
 
 /////////////////////////////////////////////////////////
 //

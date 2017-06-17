@@ -1,4 +1,4 @@
-CXXFLAGS         = -std=c++11 -Wall -Wextra -Wpedantic -I./src -I/usr/include -Wno-gnu-anonymous-struct -g
+CXXFLAGS         = -std=c++11 -Wall -Wextra -Wpedantic -I./src -I/usr/include -Wno-gnu-anonymous-struct -g -O0
 PP_FLAGS         = -D LT_DEBUG -D VX_DEV
 LDLIBS           = -L/usr/lib -lm -lglfw -lGL -lpthread -lX11 -lXi -lXrandr -ldl
 

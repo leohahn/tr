@@ -62,14 +62,6 @@ static_assert(sizeof(f64) == 8, "f64 should have 8 bytes");
 #define lt_abs(x) (((x) < 0) ? -(x) : (x))
 #endif
 
-#ifndef lt_min
-#define lt_min(a, b) ((a) < (b) ? (a) : b)
-#endif
-
-#ifndef lt_max
-#define lt_max(a, b) ((a) > (b) ? (a) : (b))
-#endif
-
 #ifndef lt_in_open_interval
 #define lt_in_open_interval(x, min, max)  ((min) < (x) && (x) < (max))
 #endif
@@ -142,6 +134,34 @@ lt_is_little_endian()
         return true;
     else
         return false;
+}
+
+template <typename T> internal inline T
+lt_min(const T a, const T b)
+{
+    return (a < b ? a : b);
+}
+
+template <typename T> internal inline T
+lt_min(const T a, const T b, const T c)
+{
+    T min;
+    if (a < b) min = a; else min = b;
+    if (min < c) return min; else return c;
+}
+
+template <typename T> internal inline T
+lt_max(const T a, const T b)
+{
+    return (a > b ? a : b);
+}
+
+template <typename T> internal inline T
+lt_max(const T a, const T b, const T c)
+{
+    T max;
+    if (a > b) max = a; else max = b;
+    if (max > c) return max; else return c;
 }
 
 void get_display_dpi(i32 *x, i32 *y);

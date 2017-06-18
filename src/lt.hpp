@@ -58,6 +58,10 @@ static_assert(sizeof(f64) == 8, "f64 should have 8 bytes");
 #define LT_UNUSED(x) ((void)(x))
 #endif
 
+#ifndef lt_count
+#define lt_count(arr) (sizeof((arr))/sizeof((arr)[0]))
+#endif
+
 #ifndef lt_abs
 #define lt_abs(x) (((x) < 0) ? -(x) : (x))
 #endif
@@ -68,10 +72,6 @@ static_assert(sizeof(f64) == 8, "f64 should have 8 bytes");
 
 #ifndef lt_in_closed_interval
 #define lt_in_closed_interval(x, min, max)  ((min) <= (x) && (x) <= (max))
-#endif
-
-#ifndef LT_LEN
-#define LT_LEN(x) (sizeof(x)/sizeof(x)[0])
 #endif
 
 #ifndef lt_free
@@ -165,7 +165,6 @@ lt_max(const T a, const T b, const T c)
 }
 
 void get_display_dpi(i32 *x, i32 *y);
-
 
 enum FileError {
     FileError_None,
@@ -477,7 +476,8 @@ array_push(Array<T> *arr, T val)
 }
 
 template<typename T> T
-Array<T>::operator[](isize i) {
+Array<T>::operator[](isize i)
+{
     return this->data[i];
 }
 

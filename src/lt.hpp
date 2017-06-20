@@ -81,9 +81,9 @@ static_assert(sizeof(f64) == 8, "f64 should have 8 bytes");
     } while(0)
 #endif
 
-#ifndef LT_FAIL
+#ifndef LT_Fail
 #  ifdef LT_DEBUG
-#    define LT_FAIL(...) do {                                        \
+#    define LT_Fail(...) do {                                        \
         fprintf(stderr, "****** RUNTIME FAILURE ******\n");          \
         fprintf(stderr, "%s(line %d)", __FILE__, __LINE__);          \
         fprintf(stderr, __VA_ARGS__);                                \
@@ -92,13 +92,13 @@ static_assert(sizeof(f64) == 8, "f64 should have 8 bytes");
         __builtin_trap();                                            \
     } while(0)
 #  else
-#    define LT_FAIL(...)
+#    define LT_Fail(...)
 #  endif // LT_DEBUG
-#endif // LT_FAIL
+#endif // LT_Fail
 
-#ifndef LT_ASSERT
+#ifndef LT_Assert
 #  ifdef LT_DEBUG
-#    define LT_ASSERT2(cond, file, number) do {                         \
+#    define LT_Assert2(cond, file, number) do {                         \
         if (!(cond)) {                                                  \
             fprintf(stderr, "******************************\n");        \
             fprintf(stderr, "*********** ASSERT ***********\n");        \
@@ -112,11 +112,11 @@ static_assert(sizeof(f64) == 8, "f64 should have 8 bytes");
             __builtin_trap();                                           \
         }                                                               \
     } while(0)
-#    define LT_ASSERT(cond) LT_ASSERT2(cond, __FILE__, __LINE__)
+#    define LT_Assert(cond) LT_Assert2(cond, __FILE__, __LINE__)
 #  else
-#    define LT_ASSERT(cond)
+#    define LT_Assert(cond)
 #  endif // LT_DEBUG
-#endif // LT_ASSERT
+#endif // LT_Assert
 
 internal inline void
 lt_swap(i32 *a, i32 *b)
@@ -289,7 +289,7 @@ file_read_contents(const char *filename)
     file_data = (char*)malloc(sizeof(char) * file_size);
 
     if (file_data == NULL) {
-        LT_FAIL("Failed allocating memory\n");
+        LT_Fail("Failed allocating memory\n");
     }
 
     isize newlen = fread(file_data, sizeof(u8), file_size, fp);
@@ -301,7 +301,7 @@ file_read_contents(const char *filename)
         return ret;
     }
 
-    LT_ASSERT(newlen == file_size);
+    LT_Assert(newlen == file_size);
 
     if (ferror(fp) != 0) {
         fputs("Error reading file\n", stderr);
@@ -379,7 +379,7 @@ string_make(const char *buf, isize len)
 void
 string_free(String *str)
 {
-    LT_ASSERT(str != NULL);
+    LT_Assert(str != NULL);
 
     lt_free(str->data);
     lt_free(str);
@@ -388,7 +388,7 @@ string_free(String *str)
 void
 string__grow(String *str)
 {
-    LT_ASSERT(str != NULL);
+    LT_Assert(str != NULL);
 
     const f32 GROW_FACTOR = 1.5f;
 
@@ -396,7 +396,7 @@ string__grow(String *str)
     char *new_data = (char*)realloc(str->data, new_capacity);
 
     if (new_data == NULL) {
-        LT_FAIL("Could not allocate more memory\n");
+        LT_Fail("Could not allocate more memory\n");
     }
 
     memset(str->data+str->len, 0, new_capacity - str->capacity);
@@ -408,7 +408,7 @@ string__grow(String *str)
 void
 string_concat(String *str, const char *rhs)
 {
-    LT_ASSERT(str != NULL && rhs != NULL);
+    LT_Assert(str != NULL && rhs != NULL);
 
     isize rhs_len = strlen(rhs);
 
@@ -445,7 +445,7 @@ array_free(Array<T> *arr)
 template<typename T> void
 array__grow(Array<T> *arr)
 {
-    LT_ASSERT(arr != NULL);
+    LT_Assert(arr != NULL);
 
     const f32 GROW_FACTOR = 1.5f;
 
@@ -453,7 +453,7 @@ array__grow(Array<T> *arr)
     T *new_data = (T*)realloc(arr->data, new_capacity * sizeof(T));
 
     if (new_data == NULL) {
-        LT_FAIL("Could not allocate more memory\n");
+        LT_Fail("Could not allocate more memory\n");
     }
 
     arr->data = new_data;
@@ -466,7 +466,7 @@ array__grow(Array<T> *arr)
 template<typename T> void
 array_push(Array<T> *arr, T val)
 {
-    LT_ASSERT(arr != NULL);
+    LT_Assert(arr != NULL);
 
     if (arr->len+1 > arr->capacity) {
         array__grow(arr);

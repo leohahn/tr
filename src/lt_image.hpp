@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include "lt.hpp"
 
+#define TGA_IMAGE_HEADER_SIZE 18
+#define TGA_IMAGE_FOOTER_SIZE 26
+
 union Vec4i;
 
 enum TGAPixel {
@@ -51,6 +54,7 @@ struct TGAImageRGBA {
 
 TGAImageGray *lt_image_make_gray     (u16 width, u16 height);
 TGAImageRGBA *lt_image_make_rgba     (u16 width, u16 height);
+TGAImageRGBA *lt_image_load_rgba     (const char *filepath);
 void          lt_image_write_to_file (const TGAImageHeader *header, const char *filepath);
 void          lt_image_fill          (TGAImageGray *img, u8 v);
 void          lt_image_fill          (TGAImageRGBA *img, const Vec4i c);

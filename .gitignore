@@ -1,3 +1,4 @@
 *.tga
 build/*
 !build/resources
+tr.creator.user

@@ -53,7 +53,7 @@ Vec3f
 vec_normalize(const Vec3f vec)
 {
     f32 size = vec_len(vec);
-    LT_ASSERT(size >= 0);
+    LT_Assert(size >= 0);
     return Vec3f(vec.x / size, vec.y / size, vec.z / size);
 }
 

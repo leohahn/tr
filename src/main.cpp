@@ -25,7 +25,7 @@ obj_file_load(const char *filepath)
 {
     FILE *fp = fopen(filepath, "rb");
     if (!fp) {
-        LT_FAIL("Failed to open %s\n", filepath);
+        LT_Fail("Failed to open %s\n", filepath);
     }
 
     const i32 BUF_SIZE = 1000;
@@ -41,7 +41,7 @@ obj_file_load(const char *filepath)
         // Check if buffer was completely filled.
         if (buf[BUF_SIZE-1] != '\n' && buf[BUF_SIZE-1] != 0)
         {
-            LT_FAIL("Buffer was overrun\n");
+            LT_Fail("Buffer was overrun\n");
         }
         // Ignore certain lines.
         if (buf[0] == '#' || buf[0] == '\n' || buf[0] == 'g' || buf[0] == 's')
@@ -80,7 +80,7 @@ obj_file_load(const char *filepath)
         {
             fclose(fp);
             // TODO(leo): Better error handling
-            LT_FAIL("Line started with %c\n", buf[0]);
+            LT_Fail("Line started with %c\n", buf[0]);
         }
 
         memset(buf, 0, BUF_SIZE);
@@ -135,14 +135,18 @@ draw_filled_triangle(TGAImageRGBA *img, i32 z_buffer[],
     // b = -------------------------------------
     //     (y2 - y3)(x1 - x3) + (x3 - x2)(y1 - y3)
     //
+    // TODO(leo): Figure out a way of not using integer values here.
+    // This is probably the reason for the render artifacts.
     i32 y2_minus_y3 = screen_v2.y - screen_v3.y;
     i32 x3_minus_x2 = screen_v3.x - screen_v2.x;
     i32 x1_minus_x3 = screen_v1.x - screen_v3.x;
     i32 y1_minus_y3 = screen_v1.y - screen_v3.y;
     i32 y3_minus_y1 = screen_v3.y - screen_v1.y;
 
-    for (isize y = min_y; y <= max_y; y++) {
-        for (isize x = min_x; x <= max_x; x++) {
+    for (isize y = min_y; y <= max_y; y++)
+    {
+        for (isize x = min_x; x <= max_x; x++)
+        {
             Vec2i p(x, y);
 
             i32 x_minus_x3 = p.x - screen_v3.x;
@@ -156,11 +160,13 @@ draw_filled_triangle(TGAImageRGBA *img, i32 z_buffer[],
 
             // printf("a + b + b = %.2f\n", a+b+c);
 
-            if ((0 <= a && a <= 1) && (0 <= b && b <= 1) && (0 <= c && c <= 1)) {
+            if ((0 <= a && a <= 1) && (0 <= b && b <= 1) && (0 <= c && c <= 1))
+            {
                 isize z_buffer_index = x + (y * IMAGE_WIDTH);
                 i32 z_value = (a * v1.z) + (b * v2.z) + (c * v3.z);
 
-                if (z_value < z_buffer[z_buffer_index]) {
+                if (z_value < z_buffer[z_buffer_index])
+                {
                     z_buffer[z_buffer_index] = z_value;
                     lt_image_set(img, x, y, color);
                 }
@@ -178,20 +184,22 @@ draw_line(TGAImageRGBA *img, Vec2i p0, Vec2i p1, const Vec4i color)
 
     bool steep = false;
 
-    if (size_y > size_x) {
+    if (size_y > size_x)
+    {
         // Transposition
         steep = true;
         lt_swap(&p0.x, &p0.y);
         lt_swap(&p1.x, &p1.y);
     }
 
-    if (p0.x > p1.x) {
+    if (p0.x > p1.x)
+    {
         // Make sure that p0's x is always smaller than p1's x.
         lt_swap(&p0.x, &p1.x);
         lt_swap(&p0.y, &p1.y);
     }
 
-    LT_ASSERT(p0.x <= p1.x);
+    LT_Assert(p0.x <= p1.x);
 
     i32 dx = p1.x - p0.x;
     i32 dy = p1.y - p0.y;
@@ -200,15 +208,16 @@ draw_line(TGAImageRGBA *img, Vec2i p0, Vec2i p1, const Vec4i color)
 
     i32 y = p0.y;
 
-    for (isize x = p0.x; x < p1.x; x++) {
-        if (steep) {
+    for (isize x = p0.x; x < p1.x; x++)
+    {
+        if (steep)
             lt_image_set(img, y, x, color);
-        } else {
+        else
             lt_image_set(img, x, y, color);
-        }
 
         err += derr;
-        if (err > dx) {
+        if (err > dx)
+        {
             y += (p1.y > p0.y) ? 1 : -1;
             err -= 2*dx;
         }
@@ -230,14 +239,14 @@ main(void)
 
     local_persist i32 z_buffer[IMAGE_WIDTH * IMAGE_HEIGHT] = {};
 
-    for (isize y = 0; y < IMAGE_HEIGHT; y++) {
-        for (isize x = 0; x < IMAGE_WIDTH; x++) {
+    for (isize y = 0; y < IMAGE_HEIGHT; y++)
+        for (isize x = 0; x < IMAGE_WIDTH; x++)
             z_buffer[x + (y * IMAGE_WIDTH)] = INT_MAX;
-        }
-    }
 
+    // FIXME(leo): Changing the light direction kind of breaks the lighting.
     Vec3f light_dir(0.0f, 0.0f, -1.0f);
-    for (isize f = 0; f < obj.faces_vertices.len; f++) {
+    for (isize f = 0; f < obj.faces_vertices.len; f++)
+    {
         Vec3i face = obj.faces_vertices.data[f];
 
         Vec3f v1_world = obj.vertices[face.vals[0]];
@@ -249,7 +258,8 @@ main(void)
 
         f32 intensity = vec_dot(light_dir, triangle_normal);
 
-        if (intensity > 0) {
+        if (intensity > 0)
+        {
             // TODO(leo): Pass the z-buffer.
             draw_filled_triangle(img, z_buffer, v1_world, v2_world, v3_world,
                                  Vec4i(255*intensity,255*intensity,255*intensity,255));

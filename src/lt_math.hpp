@@ -58,6 +58,9 @@ union Vec3i {
 
     Vec3i();
     Vec3i(i32 x, i32 y, i32 z);
+
+    inline Vec3i operator*(f32 k) {return Vec3i(x*k, y*k, z*k);}
+    inline Vec3i operator+(const Vec3i v) {return Vec3i(x+v.x, y+v.y, z+v.z);}
 };
 
 union Vec4i {
@@ -71,6 +74,7 @@ union Vec4i {
 
     Vec4i();
     Vec4i(i32 x, i32 y, i32 z, i32 w);
+    Vec4i(Vec3i v, i32 w): x(v.x), y(v.y), z(v.z), w(w) {}
 };
 
 

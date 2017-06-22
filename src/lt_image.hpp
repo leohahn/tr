@@ -8,6 +8,7 @@
 #define TGA_IMAGE_FOOTER_SIZE 26
 
 union Vec4i;
+union Vec3i;
 
 enum TGAPixel {
     TGAPixel_Gray = 8,
@@ -79,7 +80,11 @@ void          lt_image_fill          (TGAImageGray *img, u8 v);
 void          lt_image_fill          (TGAImageRGBA *img, const Vec4i c);
 void          lt_image_set           (TGAImageGray *img, u16 x, u16 y, u8 v);
 void          lt_image_set           (TGAImageRGBA *img, u16 x, u16 y, const Vec4i c);
+Vec3i         lt_image_get           (TGAImageRGB  *img, u16 x, u16 y);
 template<typename T> void lt_image_write_to_file(const T *img, const char *filepath);
+template<typename T> i32 lt_image_height(T *img);
+template<typename T> i32 lt_image_width(T *img);
+template<typename T> i32 lt_image_area(T *img);
 
 #ifndef lt_image_free
 #define lt_image_free(img) do { \
@@ -126,8 +131,9 @@ pack_rgba(const Vec4i c)
 inline Vec3i
 unpack_rgb(u32 c)
 {
-    u32 r = c & (0xff << 16);
-    u32 g = c & (0xff << 8);
+    LT_Assert(((c >> 24) & 0xff) == 0);
+    u32 r = (c >> 16) & 0xff;
+    u32 g = (c >> 8) & 0xff;
     u32 b = c & 0xff;
     return Vec3i(r, g, b);
 }
@@ -284,7 +290,7 @@ initialize_footer(TGAImageFooter *footer)
 TGAImageGray *
 lt_image_make_gray(u16 width, u16 height)
 {
-    TGAImageGray *img = (TGAImageGray*)malloc(sizeof(*img));
+    TGAImageGray *img = (TGAImageGray*)calloc(1, sizeof(*img));
 
     initialize_header(&img->header, width, height, TGAPixel_Gray);
     img->data = (u8*)calloc(width * height,  sizeof(u8));
@@ -296,7 +302,7 @@ lt_image_make_gray(u16 width, u16 height)
 TGAImageRGBA *
 lt_image_make_rgba(u16 width, u16 height)
 {
-    TGAImageRGBA *img = (TGAImageRGBA*)malloc(sizeof(*img));
+    TGAImageRGBA *img = (TGAImageRGBA*)calloc(1, sizeof(*img));
 
     initialize_header(&img->header, width, height, TGAPixel_RGBA);
     img->data = (u32*)calloc(width * height,  sizeof(u32));
@@ -348,7 +354,7 @@ lt_image_load_rgb(const char *filepath)
         u8 pixel_value[MAX_PIXELS * 3];
 
         isize image_data_pixel = 0;
-        while (image_data_pixel < img->header.image_width*img->header.image_height)
+        while (image_data_pixel < image_data_length)
         {
             // Clear buffer at the start of the iteration.
             memset(pixel_value, 0, MAX_PIXELS * 3);
@@ -443,5 +449,22 @@ lt_image_set(TGAImageRGBA *img, u16 x, u16 y, const Vec4i shade)
 
     img->data[index] = pack_rgba(shade);
 }
+
+Vec3i
+lt_image_get(TGAImageRGB  *img, u16 x, u16 y)
+{
+    LT_Assert((img->header.image_descriptor & (0x03 << 4)) == 0);
+    LT_Assert(x < img->header.image_width);
+    LT_Assert(y < img->header.image_height);
+
+    u32 index = (y * img->header.image_width) + x;
+    LT_Assert(index < (u32)img->header.image_height * (u32)img->header.image_width);
+
+    return unpack_rgb(img->data[index]);
+}
+
+template<typename T> i32 lt_image_height(T *img) {return img->header.image_height;}
+template<typename T> i32 lt_image_width(T *img) {return img->header.image_width;}
+template<typename T> i32 lt_image_area(T *img) {return img->header.image_width*img->header.image_height;}
 
 #endif

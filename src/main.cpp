@@ -16,9 +16,17 @@
 struct ObjFile
 {
     Array<Vec3f> vertices;
+    Array<Vec3f> tex_coords;
     Array<Vec3i> faces_vertices;
     Array<Vec3i> faces_textures;
     Array<Vec3i> faces_normals;
+};
+
+struct Vertex3
+{
+    Vec3f vertice;
+    Vec3f tex_coord;
+    Vertex3(Vec3f vertice, Vec3f tex_coord): vertice(vertice), tex_coord(tex_coord) {}
 };
 
 internal ObjFile
@@ -34,6 +42,7 @@ obj_file_load(const char *filepath)
     char buf[BUF_SIZE] = {0};
 
     Array<Vec3f> vertices = array_make<Vec3f>();
+    Array<Vec3f> tex_coords = array_make<Vec3f>();
     Array<Vec3i> faces_vertices = array_make<Vec3i>();
     Array<Vec3i> faces_textures = array_make<Vec3i>();
     Array<Vec3i> faces_normals = array_make<Vec3i>();
@@ -45,14 +54,22 @@ obj_file_load(const char *filepath)
         {
             LT_Fail("Buffer was overrun\n");
         }
+
         // Ignore certain lines.
         if (buf[0] == '#' || buf[0] == '\n' || buf[0] == 'g' || buf[0] == 's')
         {
             continue;
         }
-        // Ignore vertex normals and texture coordinates.
-        if (strncmp(buf, "vt", 2) == 0 ||
-            strncmp(buf, "vn", 2) == 0)
+
+        if (strncmp(buf, "vt", 2) == 0)
+        {
+            Vec3f v;
+            sscanf(buf, "vt %f %f %f", &v.x, &v.y, &v.z);
+            array_push(&tex_coords, v);
+            continue;
+        }
+
+        if (strncmp(buf, "vn", 2) == 0)
         {
             continue;
         }
@@ -62,8 +79,10 @@ obj_file_load(const char *filepath)
             Vec3f v;
             sscanf(buf, "v %f %f %f", &v.x, &v.y, &v.z);
             array_push(&vertices, v);
+            continue;
         }
-        else if (buf[0] == 'f')
+
+        if (buf[0] == 'f')
         {
             Vec3i face_v, face_t, face_n;
 
@@ -71,9 +90,10 @@ obj_file_load(const char *filepath)
                    &face_v.x, &face_t.x, &face_n.x, &face_v.y, &face_t.y, &face_n.y,
                    &face_v.z, &face_t.z, &face_n.z);
 
-            // The vertices start at index 1 in the file.
+            // The indexes start at index 1 in the file.
             face_v.x--; face_v.y--; face_v.z--;
-            // TODO: Does normals and textures also start at index 1?
+            face_t.x--; face_t.y--; face_t.z--;
+            face_n.x--; face_n.y--; face_n.z--;
 
             array_push(&faces_vertices, face_v);
             array_push(&faces_textures, face_t);
@@ -93,9 +113,12 @@ obj_file_load(const char *filepath)
 
     ObjFile obj;
     obj.vertices = vertices;
+    obj.tex_coords = tex_coords;
     obj.faces_vertices = faces_vertices;
     obj.faces_textures = faces_textures;
     obj.faces_normals = faces_normals;
+
+    LT_Assert(faces_vertices.len == faces_textures.len);
     return obj;
 }
 
@@ -103,6 +126,7 @@ internal void
 obj_file_free(ObjFile *f)
 {
     array_free(&f->vertices);
+    array_free(&f->tex_coords);
     array_free(&f->faces_vertices);
     array_free(&f->faces_textures);
     array_free(&f->faces_normals);
@@ -126,16 +150,16 @@ barycentric(const Vec3f A, const Vec3f B, const Vec3f C, const Vec3f P)
 }
 
 internal void
-draw_filled_triangle(TGAImageRGBA *img, i32 z_buffer[],
-                     Vec3f v1, Vec3f v2, Vec3f v3, const Vec4i color)
+draw_filled_triangle(TGAImageRGBA *img, TGAImageRGB *tex, i32 z_buffer[],
+                     Vertex3 *v1, Vertex3 *v2, Vertex3 *v3, f32 intensity)
 {
     //
     // Find the bounding box of the triangle
     //
-    i32 min_x = lt_min(v1.x, v2.x, v3.x);
-    i32 max_x = lt_max(v1.x, v2.x, v3.x);
-    i32 min_y = lt_min(v1.y, v2.y, v3.y);
-    i32 max_y = lt_max(v1.y, v2.y, v3.y);
+    i32 min_x = lt_min(v1->vertice.x, v2->vertice.x, v3->vertice.x);
+    i32 max_x = lt_max(v1->vertice.x, v2->vertice.x, v3->vertice.x);
+    i32 min_y = lt_min(v1->vertice.y, v2->vertice.y, v3->vertice.y);
+    i32 max_y = lt_max(v1->vertice.y, v2->vertice.y, v3->vertice.y);
 
     //
     // Rearrange the vertices in counter clockwise order
@@ -147,21 +171,29 @@ draw_filled_triangle(TGAImageRGBA *img, i32 z_buffer[],
     {
         for (p.x = min_x; p.x <= max_x; p.x++)
         {
-            Vec3f bc_screen = barycentric(v1, v2, v3, p);
+            Vec3f bc_screen = barycentric(v1->vertice, v2->vertice, v3->vertice, p);
 
             if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0) continue;
 
-            // if ((0.0f <= a && a <= 1.0f) && (0.0f <= b && b <= 1.0f) && (0.0f <= c && c <= 1.0f))
-            // {
-                isize z_buffer_index = p.x + (p.y * IMAGE_WIDTH);
-                p.z = (bc_screen.x * v1.z) + (bc_screen.y * v2.z) + (bc_screen.z * v3.z);
+            isize z_buffer_index = p.x + (p.y * IMAGE_WIDTH);
+            p.z = (bc_screen.x * v1->vertice.z) + (bc_screen.y * v2->vertice.z) + (bc_screen.z * v3->vertice.z);
 
-                if (p.z < z_buffer[z_buffer_index])
-                {
-                    z_buffer[z_buffer_index] = p.z;
-                    lt_image_set(img, p.x, p.y, color);
-                }
-            // }
+            if (p.z < z_buffer[z_buffer_index])
+            {
+                z_buffer[z_buffer_index] = p.z;
+                Vec3i color1 = lt_image_get(tex,
+                                            v1->tex_coord.x*(lt_image_width(tex)-1),
+                                            v1->tex_coord.y*(lt_image_height(tex)-1));
+                Vec3i color2 = lt_image_get(tex,
+                                            v2->tex_coord.x*(lt_image_width(tex)-1),
+                                            v2->tex_coord.y*(lt_image_height(tex)-1));
+                Vec3i color3 = lt_image_get(tex,
+                                            v3->tex_coord.x*(lt_image_width(tex)-1),
+                                            v3->tex_coord.y*(lt_image_height(tex)-1));
+                Vec3i color = color1*bc_screen.x + color2*bc_screen.y + color3*bc_screen.z;
+                // Vec3i color(255,255,255);
+                lt_image_set(img, p.x, p.y, Vec4i(color*intensity, 255));
+            }
         }
     }
 }
@@ -246,31 +278,30 @@ main(void)
     Vec3f light_dir(0.0f, 0.0f, -1.0f);
     for (isize f = 0; f < obj.faces_vertices.len; f++)
     {
-        Vec3i face = obj.faces_vertices.data[f];
-        Vec3f v1_world = obj.vertices[face.val[0]];
-        Vec3f v2_world = obj.vertices[face.val[1]];
-        Vec3f v3_world = obj.vertices[face.val[2]];
+        Vec3i face_v = obj.faces_vertices[f];
+        Vec3i face_t = obj.faces_textures[f];
+
+        Vertex3 v1(obj.vertices[face_v.val[0]], obj.tex_coords[face_t.val[0]]);
+        Vertex3 v2(obj.vertices[face_v.val[1]], obj.tex_coords[face_t.val[1]]);
+        Vertex3 v3(obj.vertices[face_v.val[2]], obj.tex_coords[face_t.val[2]]);
         Vec3f triangle_normal = vec_normalize(
-            vec_cross(v3_world - v1_world, v2_world - v1_world)
+            vec_cross(v3.vertice - v1.vertice, v2.vertice - v1.vertice)
         );
 
         f32 intensity = vec_dot(light_dir, triangle_normal);
 
         if (intensity > 0)
         {
-            // TODO(leo): Pass the z-buffer.
-            const i32 base_color = 255;
-            draw_filled_triangle(img, z_buffer,
-                                 normalized2screen(v1_world, IMAGE_WIDTH, IMAGE_HEIGHT),
-                                 normalized2screen(v2_world, IMAGE_WIDTH, IMAGE_HEIGHT),
-                                 normalized2screen(v3_world, IMAGE_WIDTH, IMAGE_HEIGHT),
-                                 Vec4i(base_color*intensity,base_color*intensity,base_color*intensity,255));
+            v1.vertice = normalized2screen(v1.vertice, IMAGE_WIDTH, IMAGE_HEIGHT);
+            v2.vertice = normalized2screen(v2.vertice, IMAGE_WIDTH, IMAGE_HEIGHT);
+            v3.vertice = normalized2screen(v3.vertice, IMAGE_WIDTH, IMAGE_HEIGHT);
+            draw_filled_triangle(img, texture, z_buffer, &v1, &v2, &v3, intensity);
         }
     }
 
     // output and cleanup
     lt_image_write_to_file(img, "../test.tga");
-    // lt_image_write_to_file(texture, "../out-texture.tga");
+    lt_image_write_to_file(texture, "../out-texture.tga");
     lt_image_free(img);
     lt_image_free(texture);
     obj_file_free(&obj);

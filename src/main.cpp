@@ -13,7 +13,8 @@
 
 
 // TODO(leo): this is far from complete.
-struct ObjFile {
+struct ObjFile
+{
     Array<Vec3f> vertices;
     Array<Vec3i> faces_vertices;
     Array<Vec3i> faces_textures;
@@ -24,7 +25,8 @@ internal ObjFile
 obj_file_load(const char *filepath)
 {
     FILE *fp = fopen(filepath, "rb");
-    if (!fp) {
+    if (!fp)
+    {
         LT_Fail("Failed to open %s\n", filepath);
     }
 
@@ -227,18 +229,19 @@ draw_line(TGAImageRGBA *img, Vec2i p0, Vec2i p1, const Vec4i color)
 int
 main(void)
 {
-    ObjFile obj = obj_file_load("resources/african_head.obj");
-
-    TGAImageRGBA *img = lt_image_make_rgba(IMAGE_WIDTH, IMAGE_HEIGHT);
-
     const Vec4i black(0, 0, 0, 255);
     const Vec4i red(255, 0, 0, 255);
     const Vec4i white(255, 255, 255, 255);
+
+    ObjFile obj = obj_file_load("resources/african_head.obj");
+    TGAImageRGB *texture = lt_image_load_rgb("resources/african_head_diffuse.tga");
+    TGAImageRGBA *img = lt_image_make_rgba(IMAGE_WIDTH, IMAGE_HEIGHT);
 
     lt_image_fill(img, black);
 
     local_persist i32 z_buffer[IMAGE_WIDTH * IMAGE_HEIGHT] = {};
 
+    // Initialize the z buffer.
     for (isize y = 0; y < IMAGE_HEIGHT; y++)
         for (isize x = 0; x < IMAGE_WIDTH; x++)
             z_buffer[x + (y * IMAGE_WIDTH)] = INT_MAX;
@@ -267,7 +270,9 @@ main(void)
     }
 
     // output and cleanup
-    lt_image_write_to_file(&img->header, "../test.tga");
+    lt_image_write_to_file(img, "../test.tga");
+    lt_image_write_to_file(texture, "../out-texture.tga");
     lt_image_free(img);
+    lt_image_free(texture);
     obj_file_free(&obj);
 }

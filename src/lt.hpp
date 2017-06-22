@@ -166,7 +166,8 @@ lt_max(const T a, const T b, const T c)
 
 void get_display_dpi(i32 *x, i32 *y);
 
-enum FileError {
+enum FileError
+{
     FileError_None,
 
     FileError_Read,
@@ -177,7 +178,8 @@ enum FileError {
     FileError_Count,
 };
 
-struct FileContents {
+struct FileContents
+{
     void     *data;
     isize     size;
     FileError error;
@@ -193,7 +195,8 @@ isize         file_get_size(const char *filename);
 //
 //
 
-struct String {
+struct String
+{
     isize len;
     isize capacity;
     char *data;
@@ -211,7 +214,8 @@ void    string_concat (String *str, const char *rhs);
 //
 
 template<typename T>
-struct Array {
+struct Array
+{
     isize len;
     isize capacity;
     T *data;
@@ -267,7 +271,8 @@ file_read_contents(const char *filename)
     void *file_data = NULL;
 
     // TODO(leo), @Robustness: Actually check if the file exists before trying to open it.
-    if (fp == NULL) {
+    if (!fp)
+    {
         FileContents *ret = (FileContents*)malloc(sizeof(*ret));
         ret->error = FileError_NotExists;
         ret->data = NULL;
@@ -277,7 +282,8 @@ file_read_contents(const char *filename)
 
     isize file_size = file_get_size(filename);
 
-    if (file_size == -1) {
+    if (file_size == -1)
+    {
         fclose(fp);
         FileContents *ret = (FileContents*)malloc(sizeof(*ret));
         ret->error = FileError_Unknown;
@@ -288,12 +294,14 @@ file_read_contents(const char *filename)
 
     file_data = (char*)malloc(sizeof(char) * file_size);
 
-    if (file_data == NULL) {
+    if (!file_data)
+    {
         LT_Fail("Failed allocating memory\n");
     }
 
     isize newlen = fread(file_data, sizeof(u8), file_size, fp);
-    if (newlen < 0) {
+    if (newlen < 0)
+    {
         FileContents *ret = (FileContents*)malloc(sizeof(*ret));
         ret->error = FileError_Read;
         ret->data = NULL;
@@ -303,7 +311,8 @@ file_read_contents(const char *filename)
 
     LT_Assert(newlen == file_size);
 
-    if (ferror(fp) != 0) {
+    if (ferror(fp) != 0)
+    {
         fputs("Error reading file\n", stderr);
         fclose(fp);
         free(file_data);
@@ -335,10 +344,10 @@ file_get_size(const char *filename)
 {
 #if defined(__unix__)
     struct stat st;
-    if (stat(filename, &st) < 0) {
+    if (stat(filename, &st) < 0)
         return -1;
-    }
-    return st.st_size;
+    else
+        return st.st_size;
 #else
 #  error "Still not implemented"
 #endif
@@ -395,9 +404,7 @@ string__grow(String *str)
     isize new_capacity = (isize)(str->capacity * GROW_FACTOR);
     char *new_data = (char*)realloc(str->data, new_capacity);
 
-    if (new_data == NULL) {
-        LT_Fail("Could not allocate more memory\n");
-    }
+    if (!new_data) LT_Fail("Could not allocate more memory\n");
 
     memset(str->data+str->len, 0, new_capacity - str->capacity);
 
@@ -412,7 +419,8 @@ string_concat(String *str, const char *rhs)
 
     isize rhs_len = strlen(rhs);
 
-    while (str->len + rhs_len >= str->capacity) {
+    while (str->len + rhs_len >= str->capacity)
+    {
         // Increase str capacity while it cannot hold the new data.
         string__grow(str);
     }
@@ -452,9 +460,7 @@ array__grow(Array<T> *arr)
     isize new_capacity = (isize)(arr->capacity * GROW_FACTOR);
     T *new_data = (T*)realloc(arr->data, new_capacity * sizeof(T));
 
-    if (new_data == NULL) {
-        LT_Fail("Could not allocate more memory\n");
-    }
+    if (!new_data) LT_Fail("Could not allocate more memory\n");
 
     arr->data = new_data;
     arr->capacity = new_capacity;
@@ -468,7 +474,8 @@ array_push(Array<T> *arr, T val)
 {
     LT_Assert(arr != NULL);
 
-    if (arr->len+1 > arr->capacity) {
+    if (arr->len+1 > arr->capacity)
+    {
         array__grow(arr);
     }
 

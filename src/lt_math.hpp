@@ -1,7 +1,10 @@
 #ifndef LT_MATH_HPP
 #define LT_MATH_HPP
 
+#include <stdio.h>
+
 #include "lt.hpp"
+#include "math.h"
 
 #ifndef LT_PI
 #define LT_PI 3.14159265358979323846
@@ -14,7 +17,7 @@
 // Definition of a vector structure.
 //
 union Vec2i {
-    i32 vals[2];
+    i32 val[2];
     struct {
         i32 x, y;
     };
@@ -22,8 +25,17 @@ union Vec2i {
     Vec2i(i32 x, i32 y): x(x), y(y) {}
 };
 
+union Vec2f {
+    f32 val[2];
+    struct {
+        f32 x, y;
+    };
+
+    Vec2f(f32 x, f32 y): x(x), y(y) {}
+};
+
 union Vec3f {
-    f32 vals[3];
+    f32 val[3];
     struct {
         f32 x, y, z;
     };
@@ -36,7 +48,7 @@ union Vec3f {
 };
 
 union Vec3i {
-    i32 vals[3];
+    i32 val[3];
     struct {
         i32 x, y, z;
     };
@@ -49,7 +61,7 @@ union Vec3i {
 };
 
 union Vec4i {
-    i32 vals[4];
+    i32 val[4];
     struct {
         i32 x, y, z, w;
     };
@@ -62,19 +74,44 @@ union Vec4i {
 };
 
 
-Vec2i operator-     (const Vec2i lhs, const Vec2i rhs);
-Vec2i operator-     (const Vec2i v);
-Vec3f operator-     (const Vec3f a, const Vec3f b);
-Vec2i operator*     (const Vec2i v, const i32 k);
-Vec2i operator*     (const i32 k, const Vec2i v);
+inline Vec2i operator-(const Vec2i lhs, const Vec2i rhs) {return Vec2i(lhs.x - rhs.x, lhs.y - rhs.y);}
+inline Vec2i operator*(const Vec2i v, const i32 k) {return Vec2i(v.x * k, v.y * k);}
+inline Vec2i operator*(const i32 k, const Vec2i v) {return Vec2i(v.x * k, v.y * k);}
+inline Vec2i operator-(const Vec2i v) {return Vec2i(-v.x, -v.y);}
+inline Vec3f operator-(const Vec3f a, const Vec3f b) {return Vec3f(a.x-b.x, a.y-b.y, a.z-b.z);}
+inline Vec3f operator+(const Vec3f a, const Vec3f b) {return Vec3f(a.x+b.x, a.y+b.y, a.z+b.z);}
+inline Vec3f operator-(const Vec3f v) {return Vec3f(-v.x, -v.y, -v.z);}
+inline f32 vec_len(const Vec3f v) {return sqrt(v.x*v.x + v.y*v.y + v.z*v.z);}
 
-f32   vec_dot       (const Vec3f a, const Vec3f b);
-i32   vec_dot       (const Vec2i a, const Vec2i b);
-Vec3f vec_normalize (const Vec3f a);
-Vec3f vec_cross     (const Vec3f a, const Vec3f b);
-Vec2i vec_proj      (const Vec2i p, const Vec2i plane);
-f32   vec_len       (const Vec3f v);
+inline i32 vec_dot(const Vec2i a, const Vec2i b) {return (a.x * b.x) + (a.y * b.y);}
+inline f32
+vec_dot(const Vec3f lhs, const Vec3f rhs)
+{
+    return (lhs.x * rhs.x) + (lhs.y * rhs.y) + (lhs.z * rhs.z);
+}
 
+inline Vec3f
+vec_normalize(const Vec3f vec)
+{
+    f32 size = vec_len(vec);
+    LT_Assert(size >= 0);
+    return Vec3f(vec.x / size, vec.y / size, vec.z / size);
+}
+
+inline Vec2i
+vec_proj(const Vec2i p, const Vec2i plane)
+{
+    i32 alpha = vec_dot(p, plane) / vec_dot(plane, plane);
+    return alpha * plane;
+}
+
+inline Vec3f
+vec_cross(const Vec3f a, const Vec3f b)
+{
+    return Vec3f((a.y * b.z) - (a.z * b.y),
+                 (a.z * b.x) - (a.x * b.z),
+                 (a.x * b.y) - (a.y * b.x));
+}
 
 
 /////////////////////////////////////////////////////////

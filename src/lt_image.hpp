@@ -139,38 +139,6 @@ write_image_data(const T *img, FILE *fd)
         LT_Assert(fwrite(&img->data[i], img->header.pixel_depth/8, 1, fd) == 1);
 }
 
-// internal void
-// write_image_data(const TGAImageHeader *header, FILE* fp)
-// {
-//     switch (header->pixel_depth)
-//     {
-//     case TGAPixel_Gray:
-//     {
-//         TGAImageGray *img = (TGAImageGray*)header;
-//         i32 n = fwrite(img->data, sizeof(u8), header->image_width * header->image_height, fp);
-//         LT_Assert(n == header->image_width*header->image_height);
-//     } break;
-//     case TGAPixel_RGBA:
-//     {
-//         TGAImageRGBA *img = (TGAImageRGBA*)header;
-//         for (isize i = 0; i < header->image_width*header->image_height; i++)
-//         {
-//             LT_Assert(fwrite(&img->data[i], sizeof(u32), 1, fp) == 1);
-//         }
-//     } break;
-//     case TGAPixel_RGB:
-//     {
-//         TGAImageRGB *img = (TGAImageRGB*)header;
-//         for (isize i = 0; i < header->image_width*header->image_height; i++)
-//         {
-//             LT_Assert(fwrite(&img->data[i], 3, 1, fp) == 1);
-//         }
-//     } break;
-//     default:
-//         LT_Assert(false);
-//     }
-// }
-
 internal void
 write_header(const TGAImageHeader *header, FILE* fp)
 {
